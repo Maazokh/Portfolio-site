@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muhammad Maaz Kassi — Digital Artist Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Self-contained Local React 18 & Babel Runtimes (100% Offline Capable) -->
+    <script src="vendor/react.min.js"></script>
+    <script src="vendor/react-dom.min.js"></script>
+    <script src="vendor/babel.min.js"></script>
+
+    <!-- React Application Component Architecture -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ── Poses Data Model ──
+        const POSES = [
+            {
+                id: 'illustrations',
+                number: '01',
+                title: 'Illustrations',
+                image: 'illustrations_main.jpg',
+                badge: 'Hero Portrait',
+                framing: 'Close-Up / Expression Focus',
+                description: 'Signature portrait study featuring rounded amber lenses, violet curls, and high-collar teal embroidery.',
+                palette: ['#3B2252', '#F7F6F2', '#1A7D87', '#E58A32'],
+                paletteNames: ['Midnight Orchid', 'Ivory White', 'Teal Accent', 'Amber Iris']
+            },
+            {
+                id: 'concept',
+                number: '02',
+                title: 'Concept Art',
+                image: 'concept.jpg',
+                badge: 'Full Turnaround',
+                framing: 'Standing Hero Silhouette',
+                description: 'Full-length character design breakdown with ivory draped trench coat, geometric lining, and layered combat boots.',
+                palette: ['#F8F7F4', '#3E2456', '#1E8088', '#262038'],
+                paletteNames: ['Ivory Trench', 'Midnight Orchid', 'Teal Lining', 'Deep Shadow']
+            },
+            {
+                id: 'sketches',
+                number: '03',
+                title: 'Sketches',
+                image: 'sketches.jpg',
+                badge: 'Pose Dynamics',
+                framing: 'Floor-Seated Study',
+                description: 'Seated pose breakdown exploring coat drape physics, asymmetrical belt straps, and color identity.',
+                palette: ['#3A2154', '#1A7E86', '#F6F5F0', '#B094C9'],
+                paletteNames: ['Midnight Orchid', 'Ivory Leather', 'Teal Flap', 'Lavender']
+            },
+            {
+                id: 'pixel',
+                number: '04',
+                title: 'Pixel Art',
+                image: 'pixel.png',
+                badge: 'Foreshortening Focus',
+                framing: 'Dynamic Gesture Crop',
+                description: 'Intense perspective framing with skull signet rings, custom ornamental manicures, and dark tint shades.',
+                palette: ['#392051', '#E78C2F', '#B3B8BE', '#187A82'],
+                paletteNames: ['Deep Orchid', 'Gold Signet', 'Skull Silver', 'Teal Trim']
+            }
+        ];
+
+        // ── Web Audio API Synthesizer (Built-in Tactile Game Sounds) ──
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+            playHover() {
+                if (!this.ctx) this.init();
+                if (!this.ctx || this.ctx.state === 'suspended') return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(2200, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(3200, this.ctx.currentTime + 0.025);
+                    gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.025);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.025);
+                } catch(e) {}
+            }
+            playSwitch() {
+                if (!this.ctx) this.init();
+                if (!this.ctx || this.ctx.state === 'suspended') return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.07, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.08);
+                } catch(e) {}
+            }
+            playChime() {
+                if (!this.ctx) this.init();
+                if (!this.ctx || this.ctx.state === 'suspended') return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+                    osc.frequency.setValueAtTime(1320, this.ctx.currentTime + 0.06);
+                    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                } catch(e) {}
+            }
+        }
+        const sfx = new SoundFX();
+
+        // ── Main React Portfolio App ──
+        function App() {
+            const [activeId, setActiveId] = useState('illustrations');
+            const [soundOn, setSoundOn] = useState(true);
+            const [lightboxOpen, setLightboxOpen] = useState(false);
+            const [specsOpen, setSpecsOpen] = useState(false);
+            const [toast, setToast] = useState(null);
+            const [stingerActive, setStingerActive] = useState(false);
+            const [isReversed, setIsReversed] = useState(false);
+
+            const activeIndex = POSES.findIndex(p => p.id === activeId);
+            const currentPose = POSES[activeIndex] || POSES[0];
+
+            // Dual layer references for in-place pose dissolve
+            const layerARef = useRef(null);
+            const layerBRef = useRef(null);
+            const imgARef = useRef(null);
+            const imgBRef = useRef(null);
+            const flashRef = useRef(null);
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            const timer1Ref = useRef(null);
+            const timer2Ref = useRef(null);
+            const animFrameRef = useRef(null);
+
+            // Preload images into cache
+            useEffect(() => {
+                POSES.forEach(pose => {
+                    const img = new Image();
+                    img.src = pose.image;
+                });
+            }, []);
+
+            // Toast helper
+            const showToast = useCallback((msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(null), 2400);
+            }, []);
+
+            // Copy color hex to clipboard
+            const handleCopyColor = useCallback((name, hex) => {
+                if (soundOn) sfx.playChime();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(hex).then(() => {
+                        showToast(`Copied ${name} (${hex}) to clipboard!`);
+                    }).catch(() => {
+                        showToast(`${name}: ${hex}`);
+                    });
+                } else {
+                    showToast(`${name}: ${hex}`);
+                }
+            }, [soundOn, showToast]);
+
+            // Procedural Action Dash Speed Smear (0.28s)
+            const triggerActionDash = useCallback((reversed) => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                const W = canvas.width;
+                const H = canvas.height;
+                const startTime = performance.now();
+                const duration = 280;
+
+                const streaks = Array.from({ length: 18 }, () => ({
+                    y: Math.random() * H,
+                    thickness: 2 + Math.random() * 8,
+                    speed: 0.85 + Math.random() * 0.45,
+                    color: Math.random() > 0.4 ? 'rgba(255, 255, 255, 0.95)' : (Math.random() > 0.5 ? 'rgba(26, 125, 135, 0.9)' : 'rgba(59, 34, 82, 0.85)'),
+                    offset: Math.random() * 0.2
+                }));
+
+                const renderFrame = (now) => {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    ctx.clearRect(0, 0, W, H);
+
+                    // Dynamic speed lines
+                    streaks.forEach(s => {
+                        const localP = Math.max(0, Math.min(1, (progress - s.offset) / 0.7));
+                        if (localP > 0 && localP < 1) {
+                            const length = W * 0.5 * Math.sin(localP * Math.PI);
+                            const startX = reversed 
+                                ? W - (localP * W * s.speed)
+                                : localP * W * s.speed;
+
+                            ctx.beginPath();
+                            ctx.moveTo(startX, s.y);
+                            ctx.lineTo(startX + (reversed ? length : -length), s.y);
+                            ctx.strokeStyle = s.color;
+                            ctx.lineWidth = s.thickness;
+                            ctx.lineCap = 'round';
+                            ctx.stroke();
+                        }
+                    });
+
+                    // Apex action flash at midpoint
+                    if (progress > 0.35 && progress < 0.65) {
+                        const flashAlpha = Math.sin((progress - 0.35) / 0.3 * Math.PI) * 0.65;
+                        ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+                        ctx.fillRect(0, 0, W, H);
+                    }
+
+                    if (progress < 1) {
+                        animFrameRef.current = requestAnimationFrame(renderFrame);
+                    } else {
+                        ctx.clearRect(0, 0, W, H);
+                    }
+                };
+
+                if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+                animFrameRef.current = requestAnimationFrame(renderFrame);
+            }, []);
+
+            // Execute Universal Action Dash Stinger (Forward & Reversible)
+            const switchPose = useCallback((targetId) => {
+                if (targetId === activeId) return;
+
+                const targetIndex = POSES.findIndex(p => p.id === targetId);
+                const targetPose = POSES[targetIndex];
+                if (!targetPose) return;
+
+                // Check if moving backwards / back towards the first button
+                const goingBack = targetIndex < activeIndex;
+                setIsReversed(goingBack);
+                setStingerActive(true);
+
+                if (soundOn) sfx.playSwitch();
+                setActiveId(targetId);
+
+                // 1. Play video stinger if video file is present
+                const video = videoRef.current;
+                if (video) {
+                    video.currentTime = 0;
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {});
+                    }
+                }
+
+                // 2. Play dynamic anime action dash streaks (flipped if goingBack)
+                triggerActionDash(goingBack);
+
+                // Clear any in-flight timers
+                if (timer1Ref.current) clearTimeout(timer1Ref.current);
+                if (timer2Ref.current) clearTimeout(timer2Ref.current);
+
+                const layerA = layerARef.current;
+                const layerB = layerBRef.current;
+                const imgA = imgARef.current;
+                const imgB = imgBRef.current;
+
+                if (!layerA || !layerB || !imgA || !imgB) return;
+
+                // Sync base
+                layerA.style.transition = 'none';
+                layerA.style.opacity = '1';
+                layerA.style.filter = 'none';
+
+                layerB.style.transition = 'none';
+                layerB.style.opacity = '0';
+                layerB.style.filter = 'none';
+
+                // Load new pose in Layer B
+                imgB.src = targetPose.image;
+
+                // At midpoint of stinger (~130ms), cleanly cross-dissolve under the action smear
+                timer1Ref.current = setTimeout(() => {
+                    layerA.style.transition = 'opacity 0.12s ease-out';
+                    layerA.style.opacity = '0';
+
+                    layerB.style.transition = 'opacity 0.14s ease-in';
+                    layerB.style.opacity = '1';
+                }, 130);
+
+                // Finalize swap and deactivate stinger at 280ms
+                timer2Ref.current = setTimeout(() => {
+                    imgA.src = targetPose.image;
+                    layerA.style.transition = 'none';
+                    layerA.style.opacity = '1';
+                    layerA.style.filter = 'none';
+
+                    layerB.style.transition = 'none';
+                    layerB.style.opacity = '0';
+                    layerB.style.filter = 'none';
+
+                    setStingerActive(false);
+                }, 280);
+            }, [activeId, activeIndex, soundOn, triggerActionDash]);
+
+            // Keyboard navigation (Arrow keys + Number keys 1-4)
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (lightboxOpen || specsOpen) {
+                        if (e.key === 'Escape') {
+                            setLightboxOpen(false);
+                            setSpecsOpen(false);
+                        }
+                        return;
+                    }
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const nextIndex = (activeIndex + 1) % POSES.length;
+                        switchPose(POSES[nextIndex].id);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const prevIndex = (activeIndex - 1 + POSES.length) % POSES.length;
+                        switchPose(POSES[prevIndex].id);
+                    } else if (['1', '2', '3', '4'].includes(e.key)) {
+                        const num = parseInt(e.key, 10) - 1;
+                        if (POSES[num]) switchPose(POSES[num].id);
+                    } else if (e.key.toLowerCase() === 'f') {
+                        setLightboxOpen(true);
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [activeIndex, switchPose, lightboxOpen, specsOpen]);
+
+            return (
+                <div className="portfolio-app">
+                    {/* ── Top Utility Controls ── */}
+                    <header className="top-bar">
+                        <button
+                            className="utility-btn"
+                            onClick={() => {
+                                if (!soundOn) sfx.init();
+                                setSoundOn(!soundOn);
+                            }}
+                            title="Toggle Menu Sound FX"
+                        >
+                            <div className={`sound-wave ${soundOn ? 'active' : ''}`}>
+                                <span className="sound-bar"></span>
+                                <span className="sound-bar"></span>
+                                <span className="sound-bar"></span>
+                            </div>
+                            <span>{soundOn ? 'AUDIO ON' : 'MUTED'}</span>
+                        </button>
+
+                        <button
+                            className="utility-btn"
+                            onClick={() => {
+                                if (soundOn) sfx.playHover();
+                                setSpecsOpen(true);
+                            }}
+                        >
+                            SPECS & LORE
+                        </button>
+
+                        <button
+                            className="utility-btn"
+                            onClick={() => {
+                                if (soundOn) sfx.playHover();
+                                setLightboxOpen(true);
+                            }}
+                            title="Fullscreen Art View (Press F)"
+                        >
+                            INSPECT ART
+                        </button>
+                    </header>
+
+                    {/* ── Sidebar Navigation ── */}
+                    <nav className="sidebar">
+                        <div className="branding">
+                            <div className="brand-tag">PORTFOLIO ARCHIVE 2026</div>
+                            <h1 className="logo">Muhammad Maaz Kassi</h1>
+                            <p className="subtitle">Digital Artist • Character Design</p>
+                        </div>
+
+                        <div className="nav-section">
+                            <ul className="nav-links">
+                                {POSES.map((pose) => {
+                                    const isActive = pose.id === activeId;
+                                    return (
+                                        <li key={pose.id} className="nav-item">
+                                            <button
+                                                className={`nav-btn ${isActive ? 'active' : ''}`}
+                                                onMouseEnter={() => {
+                                                    if (soundOn && !isActive) sfx.playHover();
+                                                    switchPose(pose.id);
+                                                }}
+                                                onClick={() => switchPose(pose.id)}
+                                            >
+                                                <span className="nav-number">{pose.number}</span>
+                                                <span className="nav-label">{pose.title}</span>
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+
+                            {/* Dynamic Pose Card */}
+                            <div className="pose-card">
+                                <div className="pose-card-badge">
+                                    {currentPose.badge} — {currentPose.framing}
+                                </div>
+                                <p className="pose-card-desc">{currentPose.description}</p>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-footer">
+                            <span>NAVIGATE WITH</span>
+                            <span className="key-badge">↑</span>
+                            <span className="key-badge">↓</span>
+                            <span>OR KEYS</span>
+                            <span className="key-badge">1</span>
+                            <span className="key-badge">4</span>
+                        </div>
+                    </nav>
+
+                    {/* ── Seamless Dual-Layer Character Stage ── */}
+                    <main
+                        className="showcase"
+                        onClick={() => setLightboxOpen(true)}
+                        title="Click to Zoom Fullscreen"
+                    >
+                        <div className="stage">
+                            <div className="pose-layer" id="layer-a" ref={layerARef}>
+                                <img ref={imgARef} src={POSES[0].image} alt="Character Pose" />
+                            </div>
+                            <div className="pose-layer" id="layer-b" ref={layerBRef}>
+                                <img ref={imgBRef} src="" alt="Character Pose" />
+                            </div>
+                            
+                            {/* Universal 0.3s Action Dash Video Stinger Layer (Forward & Reverse) */}
+                            <div className={`video-stinger-container ${stingerActive ? 'active' : ''}`}>
+                                <video
+                                    ref={videoRef}
+                                    className={`video-stinger ${isReversed ? 'reverse-dir' : ''}`}
+                                    muted
+                                    playsInline
+                                    preload="auto"
+                                    src="transition.mp4"
+                                />
+                                <canvas
+                                    ref={canvasRef}
+                                    className={`canvas-stinger ${isReversed ? 'reverse-dir' : ''}`}
+                                />
+                            </div>
+
+                            <div className="flash-overlay" id="flash" ref={flashRef}></div>
+                        </div>
+                    </main>
+
+                    {/* ── Interactive Color Palette Dock (Bottom Left) ── */}
+                    <div className="palette-dock">
+                        <span className="palette-label">COLOR PALETTE</span>
+                        <div className="palette-swatches">
+                            {currentPose.palette.map((hex, i) => (
+                                <div
+                                    key={hex + i}
+                                    className="swatch-item"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopyColor(currentPose.paletteNames[i], hex);
+                                    }}
+                                    title={`Click to copy ${currentPose.paletteNames[i]} (${hex})`}
+                                >
+                                    <div
+                                        className="swatch-circle"
+                                        style={{ backgroundColor: hex }}
+                                    ></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* ── Interactive Thumbnail Strip (Bottom Right) ── */}
+                    <div className="thumbnail-strip">
+                        {POSES.map((pose) => (
+                            <div
+                                key={pose.id}
+                                className={`thumb-card ${pose.id === activeId ? 'active' : ''}`}
+                                onMouseEnter={() => {
+                                    if (soundOn && pose.id !== activeId) sfx.playHover();
+                                    switchPose(pose.id);
+                                }}
+                                onClick={() => switchPose(pose.id)}
+                                title={pose.title}
+                            >
+                                <img src={pose.image} alt={pose.title} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ── Toast Alert ── */}
+                    {toast && (
+                        <div className="toast-msg">
+                            {toast}
+                        </div>
+                    )}
+
+                    {/* ── Lightbox Fullscreen Art View ── */}
+                    {lightboxOpen && (
+                        <div
+                            className="lightbox-modal"
+                            onClick={() => setLightboxOpen(false)}
+                        >
+                            <button
+                                className="lightbox-close"
+                                onClick={() => setLightboxOpen(false)}
+                            >
+                                ✕
+                            </button>
+                            <div
+                                className="lightbox-content"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <img src={currentPose.image} alt={currentPose.title} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Character Specs & Lore Drawer ── */}
+                    {specsOpen && (
+                        <aside className="specs-drawer">
+                            <div className="specs-header">
+                                <h2 className="specs-title">Character Specs</h2>
+                                <button
+                                    className="specs-close"
+                                    onClick={() => setSpecsOpen(false)}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="specs-body">
+                                <div className="spec-group">
+                                    <div className="spec-label">Codename / Concept</div>
+                                    <div className="spec-value">Midnight Orchid (Aura)</div>
+                                </div>
+
+                                <div className="spec-group">
+                                    <div className="spec-label">Lead Artist</div>
+                                    <div className="spec-value">Muhammad Maaz Kassi</div>
+                                </div>
+
+                                <div className="spec-group">
+                                    <div className="spec-label">Primary Color Scheme</div>
+                                    <div className="spec-tags">
+                                        <span className="spec-tag">Midnight Orchid</span>
+                                        <span className="spec-tag">Ivory Trench</span>
+                                        <span className="spec-tag">Teal Trim</span>
+                                        <span className="spec-tag">Amber Lenses</span>
+                                    </div>
+                                </div>
+
+                                <div className="spec-group">
+                                    <div className="spec-label">Costume Breakdown</div>
+                                    <div className="spec-value">
+                                        Tailored oversized trench coat with teal geo-print inner lining, high-collar mock turtleneck, double-buckle utility belt with chain accent, skull signet rings, and two-tone high boots.
+                                    </div>
+                                </div>
+
+                                <div className="spec-group">
+                                    <div className="spec-label">Design Pillars</div>
+                                    <div className="spec-tags">
+                                        <span className="spec-tag">Cyber-Streetwear</span>
+                                        <span className="spec-tag">Anime Aesthetic</span>
+                                        <span className="spec-tag">Action Silhouette</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="specs-footer">
+                                Original artwork & designs by <strong>Muhammad Maaz Kassi</strong>. All rights reserved.
+                            </div>
+                        </aside>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

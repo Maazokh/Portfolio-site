@@ -1,0 +1,33 @@
+======================================================
+HOW TO USE VIDEO TRANSITIONS IN YOUR PORTFOLIO
+======================================================
+
+1. FILE NAMES & LOCATION:
+   Place your 0.25s - 0.3s transition video directly in this folder:
+   
+   - Name it: "transition.mp4" (or "transition.webm")
+   
+2. AUTOMATIC REVERSE:
+   The website is already programmed to automatically detect the 
+   direction you are hovering.
+   
+   - Moving Down (Button 1 -> 2 -> 3 -> 4):
+     Plays "transition.mp4" forward (Left to Right dash).
+     
+   - Moving Back Up / Hovering back to the First Button:
+     Automatically flips the video horizontally (Right to Left dash) 
+     using hardware-accelerated CSS scaleX(-1)!
+     
+   - (Optional) If you have a separately rendered reverse video, 
+     you can also name it "transition-rev.mp4" and it will use that!
+
+3. RECOMMENDED VIDEO SPECS:
+   - Length: 0.25 to 0.35 seconds (approx. 8 to 12 frames at 30-60fps)
+   - Background: Transparent (WebM) or pure White #FFFFFF (MP4/WebM)
+   - Audio: None / Muted (browsers require muted videos for hover autoplay)
+   - Dimensions: 1920x1080 (16:9) or match your character canvas
+
+Until you add your video, the website uses a built-in high-speed 
+anime action-dash speed smear that already demonstrates the forward 
+and reverse transitions!
+======================================================
